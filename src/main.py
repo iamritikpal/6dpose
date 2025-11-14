@@ -9,6 +9,9 @@ import time
 from pathlib import Path
 from typing import Dict, List
 
+# Add src directory to path for local imports
+sys.path.insert(0, str(Path(__file__).parent))
+
 import numpy as np
 import yaml
 from tqdm import tqdm

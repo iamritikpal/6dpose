@@ -265,14 +265,14 @@ The main configuration file is `configs/config.yaml`. Key parameters:
 
 ```yaml
 MODEL:
-  BACKBONE: dinov2_vitb14  # Options: dinov2_vits14, dinov2_vitb14, dinov2_vitl14
-  WEIGHTS: null            # Path to local weights (null = download from timm)
+  BACKBONE: vit_base_patch14_dinov2  # Options: vit_small_patch14_dinov2, vit_base_patch14_dinov2, vit_large_patch14_dinov2
+  WEIGHTS: null                       # Path to local weights (null = download from timm)
 ```
 
 **Model sizes:**
-- `dinov2_vits14`: Small, fastest (~22M params)
-- `dinov2_vitb14`: Base, balanced (~86M params, recommended)
-- `dinov2_vitl14`: Large, most accurate (~300M params, slowest)
+- `vit_small_patch14_dinov2`: Small, fastest (~22M params)
+- `vit_base_patch14_dinov2`: Base, balanced (~86M params, recommended)
+- `vit_large_patch14_dinov2`: Large, most accurate (~300M params, slowest)
 
 ### Rendering Settings
 
@@ -398,7 +398,7 @@ python tests/test_data_loading.py
 ### Issue: "CUDA out of memory"
 
 **Solutions:**
-1. Use smaller DINOv2 model: `MODEL.BACKBONE dinov2_vits14`
+1. Use smaller DINOv2 model: `MODEL.BACKBONE vit_small_patch14_dinov2`
 2. Reduce template views: `RENDER.N_VIEWS 200`
 3. Process fewer frames: `DATA.END_IDX 10`
 
@@ -424,7 +424,7 @@ export PYOPENGL_PLATFORM=egl
 **Solutions:**
 1. Increase template views: `RENDER.N_VIEWS 1000`
 2. Try different elevation range: `RENDER.ELEVATION_DEG [0, 90]`
-3. Use larger DINOv2: `MODEL.BACKBONE dinov2_vitl14`
+3. Use larger DINOv2: `MODEL.BACKBONE vit_large_patch14_dinov2`
 
 ### Issue: Poor pose accuracy
 
@@ -438,7 +438,7 @@ export PYOPENGL_PLATFORM=egl
 
 **Optimizations:**
 1. Use GPU: Check `torch.cuda.is_available()`
-2. Use smaller backbone: `dinov2_vits14`
+2. Use smaller backbone: `vit_small_patch14_dinov2`
 3. Reduce views: `RENDER.N_VIEWS 200`
 4. Limit frames: `DATA.END_IDX 50`
 

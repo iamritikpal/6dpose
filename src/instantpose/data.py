@@ -125,10 +125,16 @@ def load_occlusion_linemod(
     if not rgbd_dir.exists():
         raise ValueError(f"RGB-D directory not found: {rgbd_dir}")
     
-    # Find all color images
+    # Find all color images (check both direct path and rgb_noseg subdirectory)
     color_files = sorted(rgbd_dir.glob("color_*.png"))
     if len(color_files) == 0:
-        raise ValueError(f"No color images found in {rgbd_dir}")
+        # Try rgb_noseg subdirectory
+        rgb_noseg_dir = rgbd_dir / "rgb_noseg"
+        if rgb_noseg_dir.exists():
+            color_files = sorted(rgb_noseg_dir.glob("color_*.png"))
+    
+    if len(color_files) == 0:
+        raise ValueError(f"No color images found in {rgbd_dir} or {rgbd_dir / 'rgb_noseg'}")
     
     # Process frames
     frames = []
@@ -145,6 +151,12 @@ def load_occlusion_linemod(
         
         # Find corresponding depth
         depth_path = rgbd_dir / f"depth_{stem.split('_')[1]}.png"
+        if not depth_path.exists():
+            # Try depth_noseg subdirectory
+            depth_noseg_dir = rgbd_dir / "depth_noseg"
+            if depth_noseg_dir.exists():
+                depth_path = depth_noseg_dir / f"depth_{stem.split('_')[1]}.png"
+        
         if not depth_path.exists():
             print(f"Warning: Depth not found for {color_path.name}, skipping")
             continue

@@ -24,7 +24,7 @@ DATA:
 
 # Model configuration
 MODEL:
-  BACKBONE: dinov2_vitb14  # DINOv2 model variant (dinov2_vits14, dinov2_vitb14, dinov2_vitl14)
+  BACKBONE: vit_base_patch14_dinov2  # DINOv2 model variant (vit_small_patch14_dinov2, vit_base_patch14_dinov2, vit_large_patch14_dinov2)
   WEIGHTS: null  # Path to local weights (null to download from timm)
 
 # Rendering configuration for template generation

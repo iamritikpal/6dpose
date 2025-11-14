@@ -4,14 +4,22 @@ Renders RGB and depth images from multiple viewpoints.
 """
 
 import os
+import sys
+
+# Set environment for offscreen rendering BEFORE importing pyrender
+# On Linux, use EGL for headless rendering
+# On Windows, don't set PYOPENGL_PLATFORM - let pyrender use default OpenGL context
+if sys.platform != 'win32':
+    os.environ['PYOPENGL_PLATFORM'] = 'egl'
+# On Windows, ensure we're not trying to use EGL
+elif 'PYOPENGL_PLATFORM' in os.environ:
+    del os.environ['PYOPENGL_PLATFORM']
+
 from typing import List, Tuple
 
 import numpy as np
 import trimesh
 import pyrender
-
-# Set environment for offscreen rendering (headless mode)
-os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 
 def sample_camera_poses(
@@ -120,7 +128,21 @@ def render_mesh_views(
     camera = pyrender.PerspectiveCamera(yfov=np.deg2rad(fov_deg), aspectRatio=width/height)
     
     # Create renderer
-    renderer = pyrender.OffscreenRenderer(width, height)
+    try:
+        renderer = pyrender.OffscreenRenderer(width, height)
+    except Exception as e:
+        if sys.platform == 'win32':
+            print("\n" + "="*80)
+            print("ERROR: Unable to create offscreen renderer on Windows")
+            print("="*80)
+            print("\nThis is likely because pyrender needs OpenGL support.")
+            print("\nPossible solutions:")
+            print("1. Make sure your GPU drivers are up to date")
+            print("2. Try running with a visible display")
+            print("3. Use pre-rendered templates (if available)")
+            print("\nOriginal error:", str(e))
+            print("="*80 + "\n")
+        raise
     
     rgb_images = []
     depth_images = []
