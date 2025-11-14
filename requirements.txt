@@ -1,0 +1,33 @@
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+timm>=0.9.0
+
+# Numerical and scientific computing
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Computer vision and image processing
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# 3D mesh handling and rendering
+trimesh>=3.23.0
+pyrender>=0.1.45
+pyglet>=2.0.0  # Required for pyrender offscreen rendering
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0.0
+
+# Visualization
+matplotlib>=3.7.0
+
+# Optional: BOP toolkit for standardized metrics
+# bop-toolkit  # Uncomment if needed
+
+# Development tools (optional)
+# black>=23.0.0
+# ruff>=0.0.270
+# pytest>=7.4.0
+
