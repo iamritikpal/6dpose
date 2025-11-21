@@ -1,52 +1,36 @@
-# InstantPose Configuration File
-# This file contains all parameters for the 6D pose estimation pipeline
-
-# Operation mode: 'demo' for visualization only, 'eval' for metrics computation
-MODE: demo  # demo | eval
-
-# Random seed for reproducibility
-SEED: 0
-
-# File paths
-PATHS:
-  OUTPUT_DIR: outputs
-  MESH: assets/recon_meshes/object.obj  # Path to reconstructed mesh (.obj or .ply)
-  REF_IMAGE: assets/references/object_ref.png  # Optional reference image
-
-# Dataset configuration
-DATA:
-  DATASET: OCCLUSION_LINEMOD  # LINEMOD | OCCLUSION_LINEMOD
-  DATA_ROOT: /path/to/OCCLUSION_LINEMOD  # Root directory of dataset
-  SEQ_PATH: null  # For LINEMOD: path to specific object sequence
-  OBJECT_ID: ape  # Object name (e.g., 'ape', 'cat', 'driller')
-  START_IDX: 1  # Starting frame index
-  END_IDX: -1  # Ending frame index (-1 for all frames)
-
-# Model configuration
 MODEL:
-  BACKBONE: vit_base_patch14_dinov2  # DINOv2 model variant (vit_small_patch14_dinov2, vit_base_patch14_dinov2, vit_large_patch14_dinov2)
-  WEIGHTS: null  # Path to local weights (null to download from timm)
+  BACKBONE: vit_base_patch14_dinov2
+  WEIGHTS: null
 
-# Rendering configuration for template generation
+DATA:
+  DATASET: OCCLUSION_LINEMOD  # Options: LINEMOD, OCCLUSION_LINEMOD, YCBV
+  DATA_ROOT: D:/University/Classes/CV/6dpose/OCCLUSION_LINEMOD
+  OBJECT_ID: ape
+  START_IDX: 1
+  END_IDX: 100
+  SEQ_ID: 48 # Only for YCBV (scene ID)
+
+PATHS:
+  MESH: assets/recon_meshes/ape.ply
+  OUTPUT_DIR: outputs/experiment_name
+
 RENDER:
-  N_VIEWS: 400  # Number of viewpoints to render
-  ELEVATION_DEG: [0, 60]  # Elevation range in degrees
-  AZIMUTH_DEG: [0, 360]  # Azimuth range in degrees
-  DISTANCE: 0.7  # Camera distance from object center
-  IMG_SIZE: [480, 640]  # Image size [H, W]
-  FOV_DEG: 57  # Field of view in degrees
+  N_VIEWS: 400
+  ELEVATION_DEG: [0, 60]
+  AZIMUTH_DEG: [0, 360]
+  DISTANCE: 0.7
+  IMG_SIZE: [480, 640]
+  FOV_DEG: 57
 
-# Feature matching configuration
 MATCH:
-  TOPK: 2000  # Maximum number of matches to consider
+  TOPK: 2000
 
-# Pose refinement configuration
 REFINE:
-  RANSAC_ITERS: 2000  # Number of RANSAC iterations
-  INLIER_THRESH: 0.01  # RANSAC inlier threshold in meters
+  RANSAC_ITERS: 2000
+  INLIER_THRESH: 0.01
 
-# Evaluation configuration
 EVAL:
-  ADD_THRESH: 0.1  # ADD metric threshold (fraction of object diameter)
-  SYMMETRIC_OBJECTS: ['eggbox', 'glue']  # Objects requiring ADD-S metric
-
+  ADD_THRESH: 0.1
+  SYMMETRIC_OBJECTS: ['eggbox', 'glue', 'bowl', 'clamp', 'extra_large_clamp'] # Add symmetric objects here
+SEED: 42
+MODE: demo  # Options: demo, eval

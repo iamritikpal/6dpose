@@ -1,5 +1,5 @@
 """
-Data loading utilities for LINEMOD and OCCLUSION_LINEMOD datasets.
+Data loading utilities for LINEMOD, OCCLUSION_LINEMOD, and YCB-V datasets.
 Handles RGB-D images, poses, and camera intrinsics.
 """
 
@@ -123,7 +123,18 @@ def load_occlusion_linemod(
     # Find RGB-D directory
     rgbd_dir = root / "RGB-D"
     if not rgbd_dir.exists():
-        raise ValueError(f"RGB-D directory not found: {rgbd_dir}")
+        # If direct RGB-D folder doesn't exist, check if we are already IN the RGB-D folder context or deeper
+        # But typically for OCCLUSION_LINEMOD root, it should have RGB-D.
+        # Let's check if the user pointed to the inner OCCLUSION_LINEMOD folder or the outer one.
+        # Structure is typically OCCLUSION_LINEMOD/OCCLUSION_LINEMOD/RGB-D
+        # Check if there's a nested OCCLUSION_LINEMOD directory
+        nested_dir = root / "OCCLUSION_LINEMOD" / "RGB-D"
+        if nested_dir.exists():
+            rgbd_dir = nested_dir
+            # Also update root to be the inner one for poses/models search
+            root = root / "OCCLUSION_LINEMOD"
+        else:
+             raise ValueError(f"RGB-D directory not found in {root}")
     
     # Find all color images (check both direct path and rgb_noseg subdirectory)
     color_files = sorted(rgbd_dir.glob("color_*.png"))
@@ -299,6 +310,127 @@ def load_linemod_sequence(
     }
 
 
+def load_ycbv_sequence(
+    root: str,
+    seq_id: int,
+    start_idx: int = 1,
+    end_idx: int = -1
+) -> Dict:
+    """
+    Load a YCB-V sequence (BOP format).
+    
+    Directory structure expected:
+    YCBV/
+      test/
+        {seq_id:06d}/
+          rgb/
+            *.png or *.jpg
+          depth/
+            *.png
+          scene_gt.json
+          scene_camera.json (for intrinsics)
+    
+    Args:
+        root: Root directory of YCBV dataset
+        seq_id: Sequence ID (e.g., 48)
+        start_idx: Starting frame index
+        end_idx: Ending frame index (-1 for all)
+        
+    Returns:
+        Dictionary with keys:
+            - K: camera intrinsics [3, 3]
+            - frames: list of dicts with {rgb, depth, pose, stem}
+            - object_id: seq_id as string
+            - dataset: 'YCBV'
+    """
+    root = Path(root)
+    seq_dir = root / "test" / f"{seq_id:06d}"
+    
+    if not seq_dir.exists():
+        raise ValueError(f"Sequence directory not found: {seq_dir}")
+    
+    # Load scene info for camera and GT
+    scene_camera_path = seq_dir / "scene_camera.json"
+    scene_gt_path = seq_dir / "scene_gt.json"
+    
+    if not scene_camera_path.exists() or not scene_gt_path.exists():
+        raise ValueError(f"Missing scene info files in {seq_dir}")
+    
+    scene_camera = load_json(scene_camera_path)
+    scene_gt = load_json(scene_gt_path)
+    
+    # Get first frame intrinsics (assume constant)
+    # Keys are string frame numbers
+    first_key = sorted(scene_camera.keys())[0]
+    K = np.array(scene_camera[first_key]['cam_K'], dtype=np.float32).reshape(3, 3)
+    
+    rgb_dir = seq_dir / "rgb"
+    depth_dir = seq_dir / "depth"
+    
+    if not rgb_dir.exists():
+        raise ValueError(f"RGB directory not found in {seq_dir}")
+    
+    rgb_files = sorted(list(rgb_dir.glob("*.png")) + list(rgb_dir.glob("*.jpg")))
+    
+    frames = []
+    for rgb_path in rgb_files:
+        stem = rgb_path.stem
+        frame_num_str = stem
+        
+        # Remove leading zeros for json lookup
+        frame_key = str(int(frame_num_str))
+        
+        frame_num = int(frame_num_str)
+        
+        if frame_num < start_idx:
+            continue
+        if end_idx > 0 and frame_num > end_idx:
+            break
+        
+        depth_path = depth_dir / f"{stem}.png"
+        if not depth_path.exists():
+            print(f"Warning: Depth not found for {rgb_path.name}, skipping")
+            continue
+            
+        # Get GT pose if available
+        pose_data = None
+        if frame_key in scene_gt:
+            # YCBV scenes have multiple objects. We need to filter or handle this.
+            # For now, we just take the first object's pose or all of them?
+            # The current pipeline expects ONE object ID. 
+            # However, YCBV sequences are scenes with multiple objects.
+            # The pipeline is "Instance-Level".
+            # We should probably allow specifying which object we are looking for in this scene.
+            # But load_ycbv_sequence is just loading frames.
+            # Let's assume we want to extract the pose of a SPECIFIC object_id if passed?
+            # But here we just return the list of objects present?
+            # Wait, the pipeline iterates frames and calls estimate_pose_for_frame.
+            # If we are tracking one object, we need to know which one.
+            # Let's assume the user provides OBJECT_ID in config which matches the object ID in YCBV (e.g. 1 for master_chef_can).
+            
+            # We'll store the GT poses for ALL objects in the frame data
+            # And let the main loop filter.
+            gt_objs = scene_gt[frame_key]
+            pose_data = gt_objs # List of dicts {cam_R_m2c, cam_t_m2c, obj_id}
+            
+        frame_data = {
+            'rgb': str(rgb_path),
+            'depth': str(depth_path),
+            'gt_poses': pose_data, # Special key for YCBV
+            'pose': None, # Standard key used by main.py (single pose), we might need to adapt main.py
+            'stem': stem,
+            'frame_num': frame_num
+        }
+        frames.append(frame_data)
+        
+    return {
+        'K': K,
+        'frames': frames,
+        'object_id': str(seq_id), # Use seq_id as object_id placeholder for the scene
+        'dataset': 'YCBV'
+    }
+
+
 def load_dataset(config: Dict) -> Dict:
     """
     Load dataset based on configuration.
@@ -328,6 +460,12 @@ def load_dataset(config: Dict) -> Dict:
             start_idx=config['DATA']['START_IDX'],
             end_idx=config['DATA']['END_IDX']
         )
+    elif dataset_type == 'YCBV':
+        return load_ycbv_sequence(
+            root=config['DATA']['DATA_ROOT'],
+            seq_id=int(config['DATA'].get('SEQ_ID', 48)),  # Default to first test sequence
+            start_idx=config['DATA']['START_IDX'],
+            end_idx=config['DATA']['END_IDX']
+        )
     else:
         raise ValueError(f"Unknown dataset type: {dataset_type}")
-

@@ -243,6 +243,21 @@ python -m src.main --config configs/config.yaml \
   PATHS.MESH assets/recon_meshes/can.obj
 ```
 
+### YCB-V Dataset
+
+For YCB-Video dataset (BOP format):
+
+```bash
+python -m src.main --config configs/config.yaml \
+  DATA.DATASET YCBV \
+  DATA.DATA_ROOT /path/to/ycbv \
+  DATA.SEQ_ID 48 \
+  DATA.OBJECT_ID 1 \
+  PATHS.MESH assets/recon_meshes/obj_000001.ply
+```
+
+**Note**: `DATA.OBJECT_ID` should match the BOP object ID (e.g., 1 for 002_master_chef_can).
+
 ### High-Quality Settings
 
 For better accuracy (slower):

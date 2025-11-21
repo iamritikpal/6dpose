@@ -31,7 +31,7 @@ def test_default_intrinsics():
     assert K[0, 0] > 0, "fx should be positive"
     assert K[1, 1] > 0, "fy should be positive"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_depth_to_points():
@@ -60,7 +60,7 @@ def test_depth_to_points():
     assert np.allclose(center_point[:2], [0, 0], atol=0.01), "Center should be at (0, 0)"
     assert np.allclose(center_point[2], 1.0, atol=0.01), "Depth should be 1.0"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_projection():
@@ -87,7 +87,7 @@ def test_projection():
     
     assert np.allclose(pts_2d[0], [150.0, 50.0], atol=1e-6), "Should project correctly"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_compose_decompose():
@@ -113,7 +113,7 @@ def test_compose_decompose():
     assert np.allclose(R_out, R), "R should match"
     assert np.allclose(t_out, t), "t should match"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_projection_reprojection():
@@ -149,7 +149,7 @@ def test_projection_reprojection():
     # Should have recovered some points
     assert len(pts_3d_back) > 0, "Should recover some points"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_mask_filtering():
@@ -170,7 +170,7 @@ def test_mask_filtering():
     # Should only have 4 points
     assert len(points) == 4, f"Should have 4 points, got {len(points)}"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def run_all_tests():
@@ -187,7 +187,7 @@ def run_all_tests():
     test_mask_filtering()
     
     print("\n" + "=" * 80)
-    print("All tests passed! ✓")
+    print("All tests passed! [OK]")
     print("=" * 80)
 
 

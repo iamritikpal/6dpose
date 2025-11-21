@@ -34,7 +34,7 @@ def test_umeyama_identity():
     assert np.allclose(t, np.zeros(3), atol=1e-6), "t should be zero"
     assert np.allclose(scale, 1.0, atol=1e-6), "scale should be 1.0"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_umeyama_translation():
@@ -52,7 +52,7 @@ def test_umeyama_translation():
     assert np.allclose(t, t_true, atol=1e-6), "t should match"
     assert np.allclose(scale, 1.0, atol=1e-6), "scale should be 1.0"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_umeyama_scale():
@@ -70,7 +70,7 @@ def test_umeyama_scale():
     assert np.allclose(t, np.zeros(3), atol=1e-6), "t should be zero"
     assert np.allclose(scale, scale_true, atol=1e-3), f"scale should be {scale_true}"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_umeyama_full():
@@ -96,7 +96,7 @@ def test_umeyama_full():
     assert np.allclose(X_transformed, X_dst, atol=1e-6), "Transformed points should match"
     assert np.allclose(scale, scale_true, atol=1e-3), f"scale should be {scale_true}"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_ransac_no_outliers():
@@ -127,7 +127,7 @@ def test_ransac_no_outliers():
     error = np.mean(np.linalg.norm(X_transformed - X_dst, axis=1))
     assert error < 0.01, f"Average error should be small, got {error}"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_ransac_with_outliers():
@@ -159,7 +159,7 @@ def test_ransac_with_outliers():
     # Should detect inliers
     assert np.sum(inliers) >= n_inliers * 0.8, f"Should detect most inliers, got {np.sum(inliers)}"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def test_transform_inversion():
@@ -182,7 +182,7 @@ def test_transform_inversion():
     
     assert np.allclose(X, X_back, atol=1e-6), "Round-trip should recover original points"
     
-    print("  ✓ Passed")
+    print("  [OK] Passed")
 
 
 def run_all_tests():
@@ -200,7 +200,7 @@ def run_all_tests():
     test_transform_inversion()
     
     print("\n" + "=" * 80)
-    print("All tests passed! ✓")
+    print("All tests passed! [OK]")
     print("=" * 80)
 
 

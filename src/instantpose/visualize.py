@@ -18,8 +18,8 @@ def draw_axes(
     K: np.ndarray,
     R: np.ndarray,
     t: np.ndarray,
-    scale: float = 0.1,
-    thickness: int = 3
+    scale: float = 0.2,  # Increased from 0.1
+    thickness: int = 4   # Increased from 3
 ) -> np.ndarray:
     """
     Draw 3D coordinate axes on image.
@@ -36,6 +36,7 @@ def draw_axes(
         Image with axes drawn
     """
     img = img.copy()
+    H, W = img.shape[:2]
     
     # Define axis endpoints in object coordinates
     axes_pts = np.array([
@@ -49,6 +50,11 @@ def draw_axes(
     pts_2d = project_points(axes_pts, K, R, t)
     
     origin = tuple(pts_2d[0].astype(int))
+    
+    # Check if origin is within bounds (with some margin)
+    if not (0 <= origin[0] < W and 0 <= origin[1] < H):
+        print(f"  Warning: Pose origin {origin} is outside image bounds ({W}x{H})")
+        
     x_end = tuple(pts_2d[1].astype(int))
     y_end = tuple(pts_2d[2].astype(int))
     z_end = tuple(pts_2d[3].astype(int))
@@ -68,7 +74,7 @@ def draw_bounding_box(
     t: np.ndarray,
     bbox_3d: np.ndarray,
     color: Tuple[int, int, int] = (0, 255, 0),
-    thickness: int = 2
+    thickness: int = 3  # Increased from 2
 ) -> np.ndarray:
     """
     Draw 3D bounding box on image.

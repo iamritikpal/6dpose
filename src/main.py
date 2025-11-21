@@ -20,7 +20,7 @@ from instantpose.data import load_dataset, read_rgb, read_depth, read_pose
 from instantpose.render import TemplateRenderer
 from instantpose.features import FeatureExtractor, upsample_coords
 from instantpose.refine import estimate_pose_from_correspondences
-from instantpose.eval import PoseEvaluator
+from instantpose.eval import PoseEvaluator, load_model_points
 from instantpose.visualize import (
     save_frame_visualization,
     create_summary_figure,
@@ -330,7 +330,7 @@ def run_pipeline(config: Dict) -> None:
     
     # Initialize evaluator if in eval mode
     evaluator = None
-    if config['MODE'] == 'eval':
+    if config.get('MODE', 'demo') == 'eval':
         symmetric = dataset['object_id'] in config.get('EVAL', {}).get('SYMMETRIC_OBJECTS', [])
         evaluator = PoseEvaluator(
             mesh_path=str(mesh_path),
@@ -339,6 +339,9 @@ def run_pipeline(config: Dict) -> None:
         print(f"\n[5/6] Running evaluation (symmetric={symmetric})...")
     else:
         print("\n[5/6] Running demo mode...")
+    
+    # Load model points for visualization
+    model_pts_vis = load_model_points(str(mesh_path))
     
     # Process frames
     results = []
@@ -357,7 +360,18 @@ def run_pipeline(config: Dict) -> None:
         
         # Load GT pose if available
         R_gt, t_gt = None, None
-        if frame_data['pose'] is not None:
+        if frame_data.get('gt_poses') is not None:
+            # Handle YCB-V style multiple objects
+            try:
+                target_obj_id = int(config['DATA']['OBJECT_ID'])
+                for obj_gt in frame_data['gt_poses']:
+                    if int(obj_gt['obj_id']) == target_obj_id:
+                        R_gt = np.array(obj_gt['cam_R_m2c']).reshape(3, 3)
+                        t_gt = np.array(obj_gt['cam_t_m2c']).reshape(3) / 1000.0  # Convert mm to m
+                        break
+            except ValueError:
+                print(f"  Warning: Invalid OBJECT_ID for YCBV: {config['DATA']['OBJECT_ID']}")
+        elif frame_data['pose'] is not None:
             try:
                 R_gt, t_gt = read_pose(frame_data['pose'])
             except Exception as e:
@@ -398,7 +412,7 @@ def run_pipeline(config: Dict) -> None:
             R_pred, t_pred,
             R_gt, t_gt,
             output_path=str(vis_path),
-            model_pts=evaluator.model_pts if evaluator else None
+            model_pts=model_pts_vis
         )
         
         # Store result
